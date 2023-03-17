@@ -1,6 +1,6 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
 
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
@@ -54,7 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     poseDetector = PoseDetector(options: options);
 
-    controller = CameraController(description, ResolutionPreset.medium);
+    controller = CameraController(description, ResolutionPreset.low);
     await controller.initialize().then((_) {
       if (!mounted) {
         return;
@@ -101,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     // print("faces present = ${faces.length}");
     setState(() {
-      _scanResults = 45;
+      _scanResults = poses;
       isBusy = false;
     });
   }
@@ -157,8 +157,10 @@ class _MyHomePageState extends State<MyHomePage> {
       controller.value.previewSize!.height,
       controller.value.previewSize!.width,
     );
-
-    return const Text("faces present = ");
+    CustomPainter painter = PosePainter(imageSize, _scanResults, camDirec);
+    return CustomPaint(
+      painter: painter,
+    );
   }
 
   //toggle camera direction
@@ -192,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
           top: 0.0,
           left: 0.0,
           width: size.width,
-          height: size.height - 250,
+          height: size.height - 230,
           child: Container(
             child: (controller.value.isInitialized)
                 ? AspectRatio(
@@ -203,13 +205,21 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       );
+      stackChildren.add(
+        Positioned(
+            top: 0.0,
+            left: 0.0,
+            width: size.width,
+            height: size.height - 230,
+            child: buildResult()),
+      );
     }
 
     stackChildren.add(Positioned(
-      top: size.height - 250,
+      top: size.height - 230,
       left: 0,
       width: size.width,
-      height: 250,
+      height: 230,
       child: Container(
         color: Colors.grey,
         child: Center(
@@ -255,5 +265,107 @@ class _MyHomePageState extends State<MyHomePage> {
             children: stackChildren,
           )),
     );
+  }
+}
+
+class PosePainter extends CustomPainter {
+  PosePainter(this.absoluteImageSize, this.poses, this.camDire2);
+
+  final Size absoluteImageSize;
+  final List<Pose> poses;
+  CameraLensDirection camDire2;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double scaleX = size.width / absoluteImageSize.width;
+    final double scaleY = size.height / absoluteImageSize.height;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0
+      ..color = Colors.green;
+
+    final leftPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..color = Colors.yellow;
+
+    final rightPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..color = Colors.blueAccent;
+
+    for (final pose in poses) {
+      pose.landmarks.forEach((_, landmark) {
+        Offset pointCamBack = Offset(landmark.x * scaleX, landmark.y * scaleY);
+        Offset pointCamFront =
+            Offset(size.width - landmark.x * scaleX, landmark.y * scaleY);
+
+        if (camDire2 == CameraLensDirection.back) {
+          canvas.drawCircle(pointCamBack, 1, paint);
+        } else {
+          canvas.drawCircle(pointCamFront, 1, paint);
+        }
+
+        // canvas.drawCircle(
+        //     Offset(landmark.x * scaleX, landmark.y * scaleY), 1, paint);
+      });
+
+      void paintLine(
+          PoseLandmarkType type1, PoseLandmarkType type2, Paint paintType) {
+        final PoseLandmark joint1 = pose.landmarks[type1]!;
+        final PoseLandmark joint2 = pose.landmarks[type2]!;
+
+        Offset point1WhenCamBack = Offset(joint1.x * scaleX, joint1.y * scaleY);
+        Offset point2WhenCamBack = Offset(joint2.x * scaleX, joint2.y * scaleY);
+
+        Offset point1WhenCamFront =
+            Offset(size.width - joint1.x * scaleX, joint1.y * scaleY);
+        Offset point2WhenCamFront =
+            Offset(size.width - joint2.x * scaleX, joint2.y * scaleY);
+
+        // canvas.drawLine(Offset(joint1.x * scaleX, joint1.y * scaleY),
+        //     Offset(joint2.x * scaleX, joint2.y * scaleY), paintType);
+
+        Offset point1 = camDire2 == CameraLensDirection.front
+            ? point1WhenCamFront
+            : point1WhenCamBack;
+        Offset point2 = camDire2 == CameraLensDirection.front
+            ? point2WhenCamFront
+            : point2WhenCamBack;
+
+        canvas.drawLine(point1, point2, paintType);
+      }
+
+      //Draw arms
+      paintLine(
+          PoseLandmarkType.leftShoulder, PoseLandmarkType.leftElbow, leftPaint);
+      paintLine(
+          PoseLandmarkType.leftElbow, PoseLandmarkType.leftWrist, leftPaint);
+      paintLine(PoseLandmarkType.rightShoulder, PoseLandmarkType.rightElbow,
+          rightPaint);
+      paintLine(
+          PoseLandmarkType.rightElbow, PoseLandmarkType.rightWrist, rightPaint);
+
+      //Draw Body
+      paintLine(
+          PoseLandmarkType.leftShoulder, PoseLandmarkType.leftHip, leftPaint);
+      paintLine(PoseLandmarkType.rightShoulder, PoseLandmarkType.rightHip,
+          rightPaint);
+
+      //Draw legs
+      paintLine(PoseLandmarkType.leftHip, PoseLandmarkType.leftKnee, leftPaint);
+      paintLine(
+          PoseLandmarkType.leftKnee, PoseLandmarkType.leftAnkle, leftPaint);
+      paintLine(
+          PoseLandmarkType.rightHip, PoseLandmarkType.rightKnee, rightPaint);
+      paintLine(
+          PoseLandmarkType.rightKnee, PoseLandmarkType.rightAnkle, rightPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(PosePainter oldDelegate) {
+    return oldDelegate.absoluteImageSize != absoluteImageSize ||
+        oldDelegate.poses != poses;
   }
 }
