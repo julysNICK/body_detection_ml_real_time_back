@@ -37,9 +37,11 @@ class _MyHomePageState extends State<MyHomePage> {
   dynamic controller;
   bool isBusy = false;
   late Size size;
+  bool isPostureCorrect = false;
   late CameraDescription description = cameras[0];
   CameraLensDirection camDirec = CameraLensDirection.back;
   dynamic poseDetector;
+  List<Pose> poses = [];
   @override
   void initState() {
     super.initState();
@@ -80,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print("doPoseDetectionOnFrame");
     var frameImg = getInputImage();
     print("frameImg = $frameImg");
-    final List<Pose> poses = await poseDetector.processImage(frameImg);
+    poses = await poseDetector.processImage(frameImg);
     print(poses.length);
     for (Pose pose in poses) {
       // to access all landmarks
@@ -100,6 +102,11 @@ class _MyHomePageState extends State<MyHomePage> {
       print(landmark?.x);
     }
     // print("faces present = ${faces.length}");
+
+    Future.delayed(const Duration(seconds: 5), () {
+      checkingBackPosture();
+    });
+
     setState(() {
       _scanResults = poses;
       isBusy = false;
@@ -163,6 +170,56 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  checkingBackPosture() {
+    if (poses.isEmpty) return;
+    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+    if (rightShoulder != null &&
+        leftShoulder != null &&
+        rightHip != null &&
+        leftHip != null) {
+      if (rightShoulder.x > rightHip.x && leftShoulder.x < leftHip.x) {
+        print("Postura correta");
+
+        setState(() {
+          isPostureCorrect = true;
+        });
+      } else {
+        print("Postura incorreta");
+
+        setState(() {
+          isPostureCorrect = false;
+        });
+      }
+    }
+  }
+
+  checkingBackPostureGround() {
+    if (poses.isEmpty) return;
+    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+    dynamic slope =
+        (rightShoulder.y - leftShoulder.y) / (rightShoulder.x - leftShoulder.x);
+
+    if (slope > 0.5) {
+      print("Postura correta");
+      setState(() {
+        isPostureCorrect = true;
+      });
+    } else {
+      print("Postura incorreta");
+      setState(() {
+        isPostureCorrect = false;
+      });
+    }
+  }
+
   //toggle camera direction
   void _toggleCameraDirection() async {
     if (camDirec == CameraLensDirection.back) {
@@ -212,6 +269,39 @@ class _MyHomePageState extends State<MyHomePage> {
             width: size.width,
             height: size.height - 230,
             child: buildResult()),
+      );
+      String posture = isPostureCorrect ? "Correta" : "Incorreta";
+      stackChildren.add(
+        Positioned(
+          left: size.width / 2 - 120,
+          bottom: 80,
+          child: Container(
+            color: Colors.transparent,
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 80),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "Postura: $posture!!!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 30,
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       );
     }
 
