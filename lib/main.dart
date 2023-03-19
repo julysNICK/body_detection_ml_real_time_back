@@ -1,7 +1,9 @@
+import 'dart:math';
+
+import 'package:body_detection_ml_real_time_back/vectortest.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
 late List<CameraDescription> cameras;
@@ -36,6 +38,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   dynamic controller;
   bool isBusy = false;
+  String shouldersY = '';
+  String hipY = '';
+  String angleX = '';
+  String hipYMultiplier2 = '';
+  String shouldersYMultiplier2 = '';
+  String inRelationX = '';
+  String inRelationY = '';
+  String inRelationZ = '';
   late Size size;
   bool isPostureCorrect = false;
   late CameraDescription description = cameras[0];
@@ -103,9 +113,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     // print("faces present = ${faces.length}");
 
-    Future.delayed(const Duration(seconds: 5), () {
-      checkingBackPosture();
-    });
+    // checkSpinePosture();
+    calculationInclinationZ(poses[0]);
+    checkAnglePosture();
 
     setState(() {
       _scanResults = poses;
@@ -170,8 +180,126 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  checkingBackPosture() {
+  double calculationInclinationY(Pose pose) {
+    final leftShoulderInclination =
+        pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rightShoulderInclination =
+        pose.landmarks[PoseLandmarkType.rightShoulder];
+    final leftHipInclination = pose.landmarks[PoseLandmarkType.leftHip];
+    final rightHipInclination = pose.landmarks[PoseLandmarkType.rightHip];
+
+    final shoulderHeightInclination =
+        (leftShoulderInclination!.y + rightShoulderInclination!.y) / 2;
+
+    final hipHeightInclination =
+        (leftHipInclination!.y + rightHipInclination!.y) / 2;
+
+    final inclination = shoulderHeightInclination - hipHeightInclination;
+    setState(() {
+      inRelationY = inclination.toStringAsFixed(2);
+    });
+    return inclination;
+  }
+
+  double calculationInclinationX(Pose pose) {
+    final leftShoulderInclination =
+        pose.landmarks[PoseLandmarkType.leftShoulder];
+    final rightShoulderInclination =
+        pose.landmarks[PoseLandmarkType.rightShoulder];
+    final leftHipInclination = pose.landmarks[PoseLandmarkType.leftHip];
+    final rightHipInclination = pose.landmarks[PoseLandmarkType.rightHip];
+
+    final shoulderHeightInclination =
+        (leftShoulderInclination!.x + rightShoulderInclination!.x) / 2;
+
+    final hipHeightInclination =
+        (leftHipInclination!.x + rightHipInclination!.x) / 2;
+
+    final inclination = shoulderHeightInclination - hipHeightInclination;
+
+    setState(() {
+      inRelationX = inclination.toStringAsFixed(2);
+    });
+
+    return inclination;
+  }
+
+  double calculationInclinationZ(Pose pose) {
+    final angleZ = PoseInclinationCalculatorZ();
+
+    setState(() {
+      inRelationZ = angleZ.calculationInclinationZEi(pose).toStringAsFixed(2);
+    });
+    return angleZ.calculationInclinationZEi(pose);
+  }
+
+  // checkingBackPosture() {
+  //   if (poses.isEmpty) return;
+  //   dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+  //   dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+  //   dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+  //   dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+  //   if (rightShoulder != null &&
+  //       leftShoulder != null &&
+  //       rightHip != null &&
+  //       leftHip != null) {
+  //     if (rightShoulder.x > rightHip.x && leftShoulder.x < leftHip.x) {
+  //       print("Postura correta");
+
+  //       setState(() {
+  //         isPostureCorrect = true;
+  //       });
+  //     } else {
+  //       print("Postura incorreta");
+
+  //       setState(() {
+  //         isPostureCorrect = false;
+  //       });
+  //     }
+  //   }
+  // }
+
+  // void checkSpinePosture() {
+  //   if (poses.isEmpty) return;
+
+  //   dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+  //   dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+  //   dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+  //   dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+  //   if (rightShoulder != null &&
+  //       leftShoulder != null &&
+  //       rightHip != null &&
+  //       leftHip != null) {
+  //     final double shoulderHeight = (rightShoulder.y - leftShoulder.y) / 2;
+  //     final double hipHeight = (rightHip.y - leftHip.y) / 2;
+
+  //     if (shoulderHeight > hipHeight * 1.2) {
+  //       print("Postura correta");
+  //       setState(() {
+  //         isPostureCorrect = true;
+  //         shouldersY = shoulderHeight.toStringAsFixed(2);
+  //         hipY = hipHeight.toStringAsFixed(2);
+  //         shouldersYMultiplier2 = (shoulderHeight * 1.2).toStringAsFixed(2);
+  //         hipYMultiplier2 = (hipHeight * 1.2).toStringAsFixed(2);
+  //       });
+  //     } else {
+  //       print("Postura incorreta");
+  //       setState(() {
+  //         isPostureCorrect = false;
+  //         shouldersY = shoulderHeight.toStringAsFixed(2);
+  //         hipY = hipHeight.toStringAsFixed(2);
+  //         shouldersYMultiplier2 = (shoulderHeight * 1.2).toStringAsFixed(2);
+  //         hipYMultiplier2 = (hipHeight * 1.2).toStringAsFixed(2);
+  //       });
+  //     }
+  //   }
+  // }
+
+  void checkAnglePosture() {
     if (poses.isEmpty) return;
+
     dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
     dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
     dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
@@ -181,44 +309,43 @@ class _MyHomePageState extends State<MyHomePage> {
         leftShoulder != null &&
         rightHip != null &&
         leftHip != null) {
-      if (rightShoulder.x > rightHip.x && leftShoulder.x < leftHip.x) {
-        print("Postura correta");
+      final double shoulderYAngle = (rightShoulder.y + leftShoulder.y) / 2;
+      final double hipsYAngle = (rightHip.y + leftHip.y) / 2;
 
-        setState(() {
-          isPostureCorrect = true;
-        });
-      } else {
-        print("Postura incorreta");
+      final double verticalAngle = shoulderYAngle - hipsYAngle;
 
-        setState(() {
-          isPostureCorrect = false;
-        });
-      }
-    }
-  }
+      double spinalX = (leftShoulder.x + rightShoulder.x) / 2;
 
-  checkingBackPostureGround() {
-    if (poses.isEmpty) return;
-    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+      double angle = atan(verticalAngle / spinalX);
 
-    dynamic slope =
-        (rightShoulder.y - leftShoulder.y) / (rightShoulder.x - leftShoulder.x);
-
-    if (slope > 0.5) {
-      print("Postura correta");
       setState(() {
-        isPostureCorrect = true;
-      });
-    } else {
-      print("Postura incorreta");
-      setState(() {
-        isPostureCorrect = false;
+        angleX = angle.toStringAsFixed(2); //angle in radians
       });
     }
   }
+
+  // checkingBackPostureGround() {
+  //   if (poses.isEmpty) return;
+  //   dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+  //   dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+  //   dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+  //   dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+  //   dynamic slope =
+  //       (rightShoulder.y - leftShoulder.y) / (rightShoulder.x - leftShoulder.x);
+
+  //   if (slope > 0.5) {
+  //     print("Postura correta");
+  //     setState(() {
+  //       isPostureCorrect = true;
+  //     });
+  //   } else {
+  //     print("Postura incorreta");
+  //     setState(() {
+  //       isPostureCorrect = false;
+  //     });
+  //   }
+  // }
 
   //toggle camera direction
   void _toggleCameraDirection() async {
@@ -273,7 +400,7 @@ class _MyHomePageState extends State<MyHomePage> {
       String posture = isPostureCorrect ? "Correta" : "Incorreta";
       stackChildren.add(
         Positioned(
-          left: size.width / 2 - 120,
+          left: size.width / 2 - 190,
           bottom: 80,
           child: Container(
             color: Colors.transparent,
@@ -291,9 +418,45 @@ class _MyHomePageState extends State<MyHomePage> {
                           "Postura: $posture!!!",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 30,
+                            fontSize: 25,
                           ),
                         )
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "em relação a y: $inRelationY!!!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "em relação a x: $inRelationX!!!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "em relação a z: $inRelationZ!!!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                          ),
+                        ),
                       ],
                     ),
                   ],

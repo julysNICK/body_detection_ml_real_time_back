@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   google_mlkit_pose_detection: ^0.5.0
   camera: ^0.10.3+2
+  math_expressions: ^2.3.1
+  vector_math: ^2.1.4
 
 dev_dependencies:
   flutter_test:
