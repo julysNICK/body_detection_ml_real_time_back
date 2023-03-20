@@ -46,6 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String inRelationX = '';
   String inRelationY = '';
   String inRelationZ = '';
+  bool makingUForwards = false;
+  bool makingUBackwards = false;
   late Size size;
   bool isPostureCorrect = false;
   late CameraDescription description = cameras[0];
@@ -114,7 +116,15 @@ class _MyHomePageState extends State<MyHomePage> {
     // print("faces present = ${faces.length}");
 
     // checkSpinePosture();
-    calculationInclinationZ(poses[0]);
+    if (poses.isNotEmpty) {
+      calculationInclinationZ(poses[0]);
+      calculationInclinationX(poses[0]);
+      calculationInclinationY(poses[0]);
+      setState(() {
+        makingUForwards = checkInIfCOlumnIsMakingUForward();
+        makingUBackwards = checkInIfCOlumnIsMakingUBackward();
+      });
+    }
     checkAnglePosture();
 
     setState(() {
@@ -222,6 +232,42 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     return inclination;
+  }
+
+  bool checkInIfCOlumnIsMakingUForward() {
+    if (poses.isEmpty) return false;
+    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+    if (rightShoulder != null &&
+        leftShoulder != null &&
+        rightHip != null &&
+        leftHip != null) {
+      if (rightShoulder.x > rightHip.x && leftShoulder.x < leftHip.x) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool checkInIfCOlumnIsMakingUBackward() {
+    if (poses.isEmpty) return false;
+    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
+
+    if (rightShoulder != null &&
+        leftShoulder != null &&
+        rightHip != null &&
+        leftHip != null) {
+      if (rightShoulder.x < rightHip.x && leftShoulder.x > leftHip.x) {
+        return true;
+      }
+    }
+    return false;
   }
 
   double calculationInclinationZ(Pose pose) {
@@ -415,10 +461,22 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "Postura: $posture!!!",
+                          "coluna fazendo um U para frente: $makingUForwards, ",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 25,
+                            fontSize: 20,
+                          ),
+                        )
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "coluna fazendo um U para trás: $makingUBackwards, ",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
                           ),
                         )
                       ],
@@ -430,7 +488,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           "em relação a y: $inRelationY!!!",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 25,
+                            fontSize: 20,
                           ),
                         ),
                       ],
@@ -442,7 +500,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           "em relação a x: $inRelationX!!!",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 25,
+                            fontSize: 20,
                           ),
                         ),
                       ],
@@ -454,7 +512,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           "em relação a z: $inRelationZ!!!",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 25,
+                            fontSize: 20,
                           ),
                         ),
                       ],
