@@ -40,6 +40,16 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isBusy = false;
   String shouldersY = '';
   String hipY = '';
+  String isCurve3Text = '';
+  String isCurve5Text = '';
+  String isCurve6Text = '';
+  double result1 = 0;
+  double result2 = 0;
+  double result3 = 0;
+  double result4 = 0;
+  double result5 = 0;
+  bool isUCurveVerify = false;
+  String isCurve4Text = '';
   String angleX = '';
   String hipYMultiplier2 = '';
   String shouldersYMultiplier2 = '';
@@ -252,6 +262,161 @@ class _MyHomePageState extends State<MyHomePage> {
     return false;
   }
 
+  double _calculateDistance(Offset a, Offset b) {
+    if (b == null) {
+      return double.infinity;
+    }
+    return sqrt(pow(b.dx - a.dx, 2) + pow(b.dy - a.dy, 2));
+  }
+
+  void isCurve6(Pose pose) {
+    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+    double shoulderHipDistance =
+        (leftHip.y - leftShoulder.y + rightHip.y - rightShoulder.y) / 2;
+
+    double shoulderHipWidth =
+        (leftHip.x - leftShoulder.x + rightHip.x - rightShoulder.x) / 2;
+    double slopeColumn = atan2(shoulderHipDistance, shoulderHipWidth);
+
+    bool isCurve6 = slopeColumn < -0.5;
+
+    setState(() {
+      isCurve6 ? isCurve6Text = 'Yes' : isCurve6Text = 'No';
+    });
+  }
+
+  void isCurve5(Pose pose) {
+    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+    double shoulderHipDistance =
+        (leftHip.y - leftShoulder.y + rightHip.y - rightShoulder.y) / 2;
+
+    double shoulderHipWidth =
+        (leftHip.x - leftShoulder.x + rightHip.x - rightShoulder.x) / 2;
+
+    double inclination = shoulderHipDistance / shoulderHipWidth;
+
+    bool isCurve5 = inclination > 2.5;
+
+    setState(() {
+      isCurve5 ? isCurve5Text = 'Yes' : isCurve5Text = 'No';
+    });
+  }
+
+  void isCurve4(Pose pose) {
+    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+
+    double shoulderHeight = (rightShoulder.y + leftShoulder.y) / 2;
+    double hipHeight = (rightHip.y + leftHip.y) / 2;
+
+    double inclination = shoulderHeight - hipHeight;
+
+    bool isCurve4 = inclination > 50;
+
+    setState(() {
+      isCurve4 ? isCurve4Text = 'Yes' : isCurve4Text = 'No';
+    });
+  }
+
+  void isCurve3(Pose pose) {
+    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+
+    double resultDistanceTotal = _calculateDistance(
+          Offset(rightShoulder.x, rightShoulder.y),
+          Offset(rightHip.x, rightHip.y),
+        ) +
+        _calculateDistance(Offset(leftShoulder.x, leftShoulder.y),
+            Offset(leftHip.x, leftHip.y));
+
+    bool isCurve3 = resultDistanceTotal < 0.7;
+
+    setState(() {
+      isCurve3 ? isCurve3Text = 'Yes' : isCurve3Text = 'No';
+    });
+  }
+
+  void isCurve2(Pose pose) {
+    const double KUColumnThreshold = 0.6;
+    const double KWidthThreshold = 0.2;
+
+    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+
+    if (rightShoulder != null &&
+        leftShoulder != null &&
+        rightHip != null &&
+        leftHip != null) {
+      double dx = rightShoulder.x - rightHip.x;
+      double dy = rightShoulder.y - rightHip.y;
+
+      bool isUCurveVerify = false;
+
+      if (dx.abs() < dy.abs() * KUColumnThreshold) {
+        double width = (rightShoulder.x - leftShoulder.x).abs();
+        if (width > KWidthThreshold) {
+          isUCurveVerify = true;
+        }
+      }
+
+      if (isUCurveVerify) {
+        print("is curve");
+      } else {
+        print("is not curve");
+      }
+    }
+  }
+
+  void isCurve(Pose pose) {
+    const double KUColumnThreshold = 0.6;
+    const double KWidthThreshold = 0.2;
+
+    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
+    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
+    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
+    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
+
+    if (rightShoulder != null &&
+        leftShoulder != null &&
+        rightHip != null &&
+        leftHip != null) {
+      double dx = rightShoulder.x - rightHip.x;
+      double dy = rightShoulder.y - rightHip.y;
+
+      bool isUCurveVerify = false;
+
+      if (dx.abs() < dy.abs() * KUColumnThreshold) {
+        setState(() {
+          result1 = dx.abs();
+          result2 = dy.abs() * KUColumnThreshold;
+          result3 = (rightShoulder.x - leftShoulder.x).abs();
+          result4 = result3 * KWidthThreshold;
+          result5 = dy;
+        });
+        double width = (rightShoulder.x - leftShoulder.x).abs();
+        if (dy > width * KWidthThreshold) {
+          isUCurveVerify = true;
+
+          setState(() {
+            isUCurveVerify = true;
+          });
+        }
+      }
+    }
+  }
+
   bool checkInIfCOlumnIsMakingUBackward() {
     if (poses.isEmpty) return false;
     dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
@@ -459,9 +624,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: const [
+                        Text(
+                          "IsCurve 1",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        )
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "coluna fazendo um U para frente: $makingUForwards, ",
+                          "dx.abs(): $result1",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -473,19 +650,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "coluna fazendo um U para trás: $makingUBackwards, ",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                          ),
-                        )
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          "em relação a y: $inRelationY!!!",
+                          " dy.abs() * KUColumnThreshold: $result2!!!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -497,7 +662,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "em relação a x: $inRelationX!!!",
+                          " (rightShoulder.x - leftShoulder.x).abs(): $result3!!!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -509,7 +674,31 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "em relação a z: $inRelationZ!!!",
+                          "result3 * KWidthThreshold: $result4!!!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "dy: $result5!!!",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "isUCurveVerify: $isUCurveVerify!!!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
