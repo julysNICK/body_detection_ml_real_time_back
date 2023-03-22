@@ -127,13 +127,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // checkSpinePosture();
     if (poses.isNotEmpty) {
-      calculationInclinationZ(poses[0]);
-      calculationInclinationX(poses[0]);
-      calculationInclinationY(poses[0]);
-      setState(() {
-        makingUForwards = checkInIfCOlumnIsMakingUForward();
-        makingUBackwards = checkInIfCOlumnIsMakingUBackward();
-      });
+      // calculationInclinationZ(poses[0]);
+      // calculationInclinationX(poses[0]);
+      // calculationInclinationY(poses[0]);
+      // setState(() {
+      //   makingUForwards = checkInIfCOlumnIsMakingUForward();
+      //   makingUBackwards = checkInIfCOlumnIsMakingUBackward();
+      // });
+      isCurve3(poses[0]);
     }
     checkAnglePosture();
 
@@ -342,6 +343,15 @@ class _MyHomePageState extends State<MyHomePage> {
     bool isCurve3 = resultDistanceTotal < 0.7;
 
     setState(() {
+      result1 = resultDistanceTotal;
+      result2 = _calculateDistance(
+        Offset(rightShoulder.x, rightShoulder.y),
+        Offset(rightHip.x, rightHip.y),
+      );
+      result3 = _calculateDistance(
+        Offset(leftShoulder.x, leftShoulder.y),
+        Offset(leftHip.x, leftHip.y),
+      );
       isCurve3 ? isCurve3Text = 'Yes' : isCurve3Text = 'No';
     });
   }
@@ -371,6 +381,13 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
 
+      setState(() {
+        result1 = dx.abs();
+        result2 = dy.abs() * KUColumnThreshold;
+        result3 = (rightShoulder.x - leftShoulder.x).abs();
+        isUCurveVerify = isUCurveVerify;
+      });
+
       if (isUCurveVerify) {
         print("is curve");
       } else {
@@ -379,6 +396,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+//deu mais ou menos
   void isCurve(Pose pose) {
     const double KUColumnThreshold = 0.6;
     const double KWidthThreshold = 0.2;
@@ -626,7 +644,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: const [
                         Text(
-                          "IsCurve 1",
+                          "IsCurve 3",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -638,7 +656,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "dx.abs(): $result1",
+                          "resultDistanceTotal: ${result1.toStringAsFixed(2)}",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -650,7 +668,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          " dy.abs() * KUColumnThreshold: $result2!!!",
+                          "calculateDistance(Offset; ${result2.toStringAsFixed(2)}!!!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -662,7 +680,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          " (rightShoulder.x - leftShoulder.x).abs(): $result3!!!",
+                          "result3 = _calculateDistance(Offset();: ${result3.toStringAsFixed(2)}!!!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -670,35 +688,35 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ],
                     ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    //   children: [
+                    //     Text(
+                    //       "result3 * KWidthThreshold: ${result4.toStringAsFixed(2)}!!!",
+                    //       style: const TextStyle(
+                    //         color: Colors.white,
+                    //         fontSize: 20,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    //   children: [
+                    //     Text(
+                    //       "dy: ${result5.toStringAsFixed(2)}!!!",
+                    //       style: const TextStyle(
+                    //         color: Colors.white,
+                    //         fontSize: 20,
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "result3 * KWidthThreshold: $result4!!!",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          "dy: $result5!!!",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          "isUCurveVerify: $isUCurveVerify!!!",
+                          "isCurve3: $isCurve3Text!!!",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
