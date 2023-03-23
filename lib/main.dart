@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:body_detection_ml_real_time_back/vectortest.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -38,26 +35,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   dynamic controller;
   bool isBusy = false;
-  String shouldersY = '';
-  String hipY = '';
-  String isCurve3Text = '';
-  String isCurve5Text = '';
-  String isCurve6Text = '';
-  double result1 = 0;
-  double result2 = 0;
-  double result3 = 0;
-  double result4 = 0;
-  double result5 = 0;
-  bool isUCurveVerify = false;
-  String isCurve4Text = '';
-  String angleX = '';
-  String hipYMultiplier2 = '';
-  String shouldersYMultiplier2 = '';
-  String inRelationX = '';
-  String inRelationY = '';
-  String inRelationZ = '';
-  bool makingUForwards = false;
-  bool makingUBackwards = false;
+
+  double shoulderRightX = 0;
+  double shoulderRightZ = 0;
+  double shoulderRightY = 0;
+  double shoulderLeftX = 0;
+  double shoulderLeftZ = 0;
+  double shoulderLeftY = 0;
+
+  double hipRightX = 0;
+  double hipRightZ = 0;
+  double hipRightY = 0;
+  double hipLeftX = 0;
+  double hipLeftZ = 0;
+  double hipLeftY = 0;
+
   late Size size;
   bool isPostureCorrect = false;
   late CameraDescription description = cameras[0];
@@ -127,16 +119,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // checkSpinePosture();
     if (poses.isNotEmpty) {
-      // calculationInclinationZ(poses[0]);
-      // calculationInclinationX(poses[0]);
-      // calculationInclinationY(poses[0]);
-      // setState(() {
-      //   makingUForwards = checkInIfCOlumnIsMakingUForward();
-      //   makingUBackwards = checkInIfCOlumnIsMakingUBackward();
-      // });
-      isCurve3(poses[0]);
+      setState(() {
+        shoulderRightX = poses[0].landmarks[PoseLandmarkType.rightShoulder]!.x;
+        shoulderRightY = poses[0].landmarks[PoseLandmarkType.rightShoulder]!.y;
+        shoulderRightZ = poses[0].landmarks[PoseLandmarkType.rightShoulder]!.z;
+        shoulderLeftX = poses[0].landmarks[PoseLandmarkType.leftShoulder]!.x;
+        shoulderLeftY = poses[0].landmarks[PoseLandmarkType.leftShoulder]!.y;
+        shoulderLeftZ = poses[0].landmarks[PoseLandmarkType.leftShoulder]!.z;
+      });
     }
-    checkAnglePosture();
 
     setState(() {
       _scanResults = poses;
@@ -201,381 +192,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  double calculationInclinationY(Pose pose) {
-    final leftShoulderInclination =
-        pose.landmarks[PoseLandmarkType.leftShoulder];
-    final rightShoulderInclination =
-        pose.landmarks[PoseLandmarkType.rightShoulder];
-    final leftHipInclination = pose.landmarks[PoseLandmarkType.leftHip];
-    final rightHipInclination = pose.landmarks[PoseLandmarkType.rightHip];
-
-    final shoulderHeightInclination =
-        (leftShoulderInclination!.y + rightShoulderInclination!.y) / 2;
-
-    final hipHeightInclination =
-        (leftHipInclination!.y + rightHipInclination!.y) / 2;
-
-    final inclination = shoulderHeightInclination - hipHeightInclination;
-    setState(() {
-      inRelationY = inclination.toStringAsFixed(2);
-    });
-    return inclination;
-  }
-
-  double calculationInclinationX(Pose pose) {
-    final leftShoulderInclination =
-        pose.landmarks[PoseLandmarkType.leftShoulder];
-    final rightShoulderInclination =
-        pose.landmarks[PoseLandmarkType.rightShoulder];
-    final leftHipInclination = pose.landmarks[PoseLandmarkType.leftHip];
-    final rightHipInclination = pose.landmarks[PoseLandmarkType.rightHip];
-
-    final shoulderHeightInclination =
-        (leftShoulderInclination!.x + rightShoulderInclination!.x) / 2;
-
-    final hipHeightInclination =
-        (leftHipInclination!.x + rightHipInclination!.x) / 2;
-
-    final inclination = shoulderHeightInclination - hipHeightInclination;
-
-    setState(() {
-      inRelationX = inclination.toStringAsFixed(2);
-    });
-
-    return inclination;
-  }
-
-  bool checkInIfCOlumnIsMakingUForward() {
-    if (poses.isEmpty) return false;
-    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
-
-    if (rightShoulder != null &&
-        leftShoulder != null &&
-        rightHip != null &&
-        leftHip != null) {
-      if (rightShoulder.x > rightHip.x && leftShoulder.x < leftHip.x) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  double _calculateDistance(Offset a, Offset b) {
-    if (b == null) {
-      return double.infinity;
-    }
-    return sqrt(pow(b.dx - a.dx, 2) + pow(b.dy - a.dy, 2));
-  }
-
-  void isCurve6(Pose pose) {
-    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-    double shoulderHipDistance =
-        (leftHip.y - leftShoulder.y + rightHip.y - rightShoulder.y) / 2;
-
-    double shoulderHipWidth =
-        (leftHip.x - leftShoulder.x + rightHip.x - rightShoulder.x) / 2;
-    double slopeColumn = atan2(shoulderHipDistance, shoulderHipWidth);
-
-    bool isCurve6 = slopeColumn < -0.5;
-
-    setState(() {
-      isCurve6 ? isCurve6Text = 'Yes' : isCurve6Text = 'No';
-    });
-  }
-
-  void isCurve5(Pose pose) {
-    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-    double shoulderHipDistance =
-        (leftHip.y - leftShoulder.y + rightHip.y - rightShoulder.y) / 2;
-
-    double shoulderHipWidth =
-        (leftHip.x - leftShoulder.x + rightHip.x - rightShoulder.x) / 2;
-
-    double inclination = shoulderHipDistance / shoulderHipWidth;
-
-    bool isCurve5 = inclination > 2.5;
-
-    setState(() {
-      isCurve5 ? isCurve5Text = 'Yes' : isCurve5Text = 'No';
-    });
-  }
-
-  void isCurve4(Pose pose) {
-    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-
-    double shoulderHeight = (rightShoulder.y + leftShoulder.y) / 2;
-    double hipHeight = (rightHip.y + leftHip.y) / 2;
-
-    double inclination = shoulderHeight - hipHeight;
-
-    bool isCurve4 = inclination > 50;
-
-    setState(() {
-      isCurve4 ? isCurve4Text = 'Yes' : isCurve4Text = 'No';
-    });
-  }
-
-  void isCurve3(Pose pose) {
-    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-
-    double resultDistanceTotal = _calculateDistance(
-          Offset(rightShoulder.x, rightShoulder.y),
-          Offset(rightHip.x, rightHip.y),
-        ) +
-        _calculateDistance(Offset(leftShoulder.x, leftShoulder.y),
-            Offset(leftHip.x, leftHip.y));
-
-    bool isCurve3 = resultDistanceTotal < 0.7;
-
-    setState(() {
-      result1 = resultDistanceTotal;
-      result2 = _calculateDistance(
-        Offset(rightShoulder.x, rightShoulder.y),
-        Offset(rightHip.x, rightHip.y),
-      );
-      result3 = _calculateDistance(
-        Offset(leftShoulder.x, leftShoulder.y),
-        Offset(leftHip.x, leftHip.y),
-      );
-      isCurve3 ? isCurve3Text = 'Yes' : isCurve3Text = 'No';
-    });
-  }
-
-  void isCurve2(Pose pose) {
-    const double KUColumnThreshold = 0.6;
-    const double KWidthThreshold = 0.2;
-
-    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-
-    if (rightShoulder != null &&
-        leftShoulder != null &&
-        rightHip != null &&
-        leftHip != null) {
-      double dx = rightShoulder.x - rightHip.x;
-      double dy = rightShoulder.y - rightHip.y;
-
-      bool isUCurveVerify = false;
-
-      if (dx.abs() < dy.abs() * KUColumnThreshold) {
-        double width = (rightShoulder.x - leftShoulder.x).abs();
-        if (width > KWidthThreshold) {
-          isUCurveVerify = true;
-        }
-      }
-
-      setState(() {
-        result1 = dx.abs();
-        result2 = dy.abs() * KUColumnThreshold;
-        result3 = (rightShoulder.x - leftShoulder.x).abs();
-        isUCurveVerify = isUCurveVerify;
-      });
-
-      if (isUCurveVerify) {
-        print("is curve");
-      } else {
-        print("is not curve");
-      }
-    }
-  }
-
-//deu mais ou menos
-  void isCurve(Pose pose) {
-    const double KUColumnThreshold = 0.6;
-    const double KWidthThreshold = 0.2;
-
-    dynamic rightShoulder = pose.landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = pose.landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = pose.landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = pose.landmarks[PoseLandmarkType.leftHip];
-
-    if (rightShoulder != null &&
-        leftShoulder != null &&
-        rightHip != null &&
-        leftHip != null) {
-      double dx = rightShoulder.x - rightHip.x;
-      double dy = rightShoulder.y - rightHip.y;
-
-      bool isUCurveVerify = false;
-
-      if (dx.abs() < dy.abs() * KUColumnThreshold) {
-        setState(() {
-          result1 = dx.abs();
-          result2 = dy.abs() * KUColumnThreshold;
-          result3 = (rightShoulder.x - leftShoulder.x).abs();
-          result4 = result3 * KWidthThreshold;
-          result5 = dy;
-        });
-        double width = (rightShoulder.x - leftShoulder.x).abs();
-        if (dy > width * KWidthThreshold) {
-          isUCurveVerify = true;
-
-          setState(() {
-            isUCurveVerify = true;
-          });
-        }
-      }
-    }
-  }
-
-  bool checkInIfCOlumnIsMakingUBackward() {
-    if (poses.isEmpty) return false;
-    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
-
-    if (rightShoulder != null &&
-        leftShoulder != null &&
-        rightHip != null &&
-        leftHip != null) {
-      if (rightShoulder.x < rightHip.x && leftShoulder.x > leftHip.x) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  double calculationInclinationZ(Pose pose) {
-    final angleZ = PoseInclinationCalculatorZ();
-
-    setState(() {
-      inRelationZ = angleZ.calculationInclinationZEi(pose).toStringAsFixed(2);
-    });
-    return angleZ.calculationInclinationZEi(pose);
-  }
-
-  // checkingBackPosture() {
-  //   if (poses.isEmpty) return;
-  //   dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-  //   dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-  //   dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-  //   dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
-
-  //   if (rightShoulder != null &&
-  //       leftShoulder != null &&
-  //       rightHip != null &&
-  //       leftHip != null) {
-  //     if (rightShoulder.x > rightHip.x && leftShoulder.x < leftHip.x) {
-  //       print("Postura correta");
-
-  //       setState(() {
-  //         isPostureCorrect = true;
-  //       });
-  //     } else {
-  //       print("Postura incorreta");
-
-  //       setState(() {
-  //         isPostureCorrect = false;
-  //       });
-  //     }
-  //   }
-  // }
-
-  // void checkSpinePosture() {
-  //   if (poses.isEmpty) return;
-
-  //   dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-  //   dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-  //   dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-  //   dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
-
-  //   if (rightShoulder != null &&
-  //       leftShoulder != null &&
-  //       rightHip != null &&
-  //       leftHip != null) {
-  //     final double shoulderHeight = (rightShoulder.y - leftShoulder.y) / 2;
-  //     final double hipHeight = (rightHip.y - leftHip.y) / 2;
-
-  //     if (shoulderHeight > hipHeight * 1.2) {
-  //       print("Postura correta");
-  //       setState(() {
-  //         isPostureCorrect = true;
-  //         shouldersY = shoulderHeight.toStringAsFixed(2);
-  //         hipY = hipHeight.toStringAsFixed(2);
-  //         shouldersYMultiplier2 = (shoulderHeight * 1.2).toStringAsFixed(2);
-  //         hipYMultiplier2 = (hipHeight * 1.2).toStringAsFixed(2);
-  //       });
-  //     } else {
-  //       print("Postura incorreta");
-  //       setState(() {
-  //         isPostureCorrect = false;
-  //         shouldersY = shoulderHeight.toStringAsFixed(2);
-  //         hipY = hipHeight.toStringAsFixed(2);
-  //         shouldersYMultiplier2 = (shoulderHeight * 1.2).toStringAsFixed(2);
-  //         hipYMultiplier2 = (hipHeight * 1.2).toStringAsFixed(2);
-  //       });
-  //     }
-  //   }
-  // }
-
-  void checkAnglePosture() {
-    if (poses.isEmpty) return;
-
-    dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-    dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-    dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-    dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
-
-    if (rightShoulder != null &&
-        leftShoulder != null &&
-        rightHip != null &&
-        leftHip != null) {
-      final double shoulderYAngle = (rightShoulder.y + leftShoulder.y) / 2;
-      final double hipsYAngle = (rightHip.y + leftHip.y) / 2;
-
-      final double verticalAngle = shoulderYAngle - hipsYAngle;
-
-      double spinalX = (leftShoulder.x + rightShoulder.x) / 2;
-
-      double angle = atan(verticalAngle / spinalX);
-
-      setState(() {
-        angleX = angle.toStringAsFixed(2); //angle in radians
-      });
-    }
-  }
-
-  // checkingBackPostureGround() {
-  //   if (poses.isEmpty) return;
-  //   dynamic rightShoulder = poses[0].landmarks[PoseLandmarkType.rightShoulder];
-  //   dynamic leftShoulder = poses[0].landmarks[PoseLandmarkType.leftShoulder];
-  //   dynamic rightHip = poses[0].landmarks[PoseLandmarkType.rightHip];
-  //   dynamic leftHip = poses[0].landmarks[PoseLandmarkType.leftHip];
-
-  //   dynamic slope =
-  //       (rightShoulder.y - leftShoulder.y) / (rightShoulder.x - leftShoulder.x);
-
-  //   if (slope > 0.5) {
-  //     print("Postura correta");
-  //     setState(() {
-  //       isPostureCorrect = true;
-  //     });
-  //   } else {
-  //     print("Postura incorreta");
-  //     setState(() {
-  //       isPostureCorrect = false;
-  //     });
-  //   }
-  // }
-
   //toggle camera direction
   void _toggleCameraDirection() async {
     if (camDirec == CameraLensDirection.back) {
@@ -607,7 +223,7 @@ class _MyHomePageState extends State<MyHomePage> {
           top: 0.0,
           left: 0.0,
           width: size.width,
-          height: size.height - 230,
+          height: size.height - 190,
           child: Container(
             child: (controller.value.isInitialized)
                 ? AspectRatio(
@@ -623,7 +239,7 @@ class _MyHomePageState extends State<MyHomePage> {
             top: 0.0,
             left: 0.0,
             width: size.width,
-            height: size.height - 230,
+            height: size.height - 190,
             child: buildResult()),
       );
       String posture = isPostureCorrect ? "Correta" : "Incorreta";
@@ -649,27 +265,24 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white,
                             fontSize: 20,
                           ),
-                        )
+                        ),
                       ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "resultDistanceTotal: ${result1.toStringAsFixed(2)}",
+                          "shoulderRight X: ${shoulderRightX.toStringAsFixed(2)}",
                           style: const TextStyle(
+                            backgroundColor: Colors.black,
                             color: Colors.white,
                             fontSize: 20,
                           ),
-                        )
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
+                        ),
                         Text(
-                          "calculateDistance(Offset; ${result2.toStringAsFixed(2)}!!!",
+                          "shoulderRight Y: ${shoulderRightY.toStringAsFixed(2)}",
                           style: const TextStyle(
+                            backgroundColor: Colors.black,
                             color: Colors.white,
                             fontSize: 20,
                           ),
@@ -680,44 +293,42 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "result3 = _calculateDistance(Offset();: ${result3.toStringAsFixed(2)}!!!",
+                          "shoulderRight z: ${shoulderRightZ.toStringAsFixed(2)}",
                           style: const TextStyle(
+                            backgroundColor: Colors.black,
                             color: Colors.white,
                             fontSize: 20,
                           ),
                         ),
                       ],
                     ),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    //   children: [
-                    //     Text(
-                    //       "result3 * KWidthThreshold: ${result4.toStringAsFixed(2)}!!!",
-                    //       style: const TextStyle(
-                    //         color: Colors.white,
-                    //         fontSize: 20,
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    //   children: [
-                    //     Text(
-                    //       "dy: ${result5.toStringAsFixed(2)}!!!",
-                    //       style: const TextStyle(
-                    //         color: Colors.white,
-                    //         fontSize: 20,
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
-                          "isCurve3: $isCurve3Text!!!",
+                          "shoulderLeft X: ${shoulderLeftX.toStringAsFixed(2)}",
                           style: const TextStyle(
+                            backgroundColor: Colors.black,
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                        Text(
+                          "shoulderLeft Y: ${shoulderLeftY.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            backgroundColor: Colors.black,
+                            color: Colors.white,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "shoulderLeft z: ${shoulderLeftZ.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            backgroundColor: Colors.black,
                             color: Colors.white,
                             fontSize: 20,
                           ),
@@ -734,10 +345,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     stackChildren.add(Positioned(
-      top: size.height - 230,
+      top: size.height - 190,
       left: 0,
       width: size.width,
-      height: 230,
+      height: 190,
       child: Container(
         color: Colors.grey,
         child: Center(

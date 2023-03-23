@@ -1,0 +1,2 @@
+get x, y and z coordinates of the point the shoulders{V}
+verify coordinates {X}
